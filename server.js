@@ -2,6 +2,29 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const db = require('./database');
+const fs = require('fs');
+const VOTING_FLAG_FILE = path.join(__dirname, 'voting_closed.json');
+
+function setVotingClosed(closed) {
+  const payload = { closed: !!closed, updated_at: new Date().toISOString() };
+  try {
+    fs.writeFileSync(VOTING_FLAG_FILE, JSON.stringify(payload, null, 2));
+  } catch (err) {
+    console.error('Failed to write voting flag file:', err);
+  }
+}
+
+function isVotingClosed() {
+  try {
+    if (!fs.existsSync(VOTING_FLAG_FILE)) return false;
+    const content = fs.readFileSync(VOTING_FLAG_FILE, 'utf8');
+    const parsed = JSON.parse(content || '{}');
+    return !!parsed.closed;
+  } catch (err) {
+    console.error('Failed to read voting flag file:', err);
+    return false;
+  }
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -138,6 +161,11 @@ app.post('/api/vote', async (req, res) => {
   const { candidate } = req.body;
   const ip = getClientIp(req);
   const cityCode = getClientCityCode(req);
+
+  // Check if voting is globally closed
+  if (isVotingClosed()) {
+    return res.status(403).json({ error: 'Oylama şu anda kapatılmıştır. Teşekkür ederiz.' });
+  }
 
   // 1. Bot Flood Protection: Check if IP is currently blocked
   const floodCheck = checkVoteFlood(ip);
@@ -279,6 +307,37 @@ app.get('/api/reset-test', async (req, res) => {
 // Wildcard fallback to serve index.html for SPA routes
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Admin route: Close voting (creates flag file)
+app.get('/close-voting', (req, res) => {
+  const adminKey = process.env.ADMIN_KEY;
+  if (adminKey) {
+    const provided = req.query.key || req.headers['x-admin-key'];
+    if (!provided || provided !== adminKey) {
+      return res.status(401).json({ error: 'Unauthorized. Admin key required.' });
+    }
+  }
+  setVotingClosed(true);
+  res.json({ success: true, closed: true, message: 'Oylama kapatıldı.' });
+});
+
+// Admin route: Open voting (removes/clears flag)
+app.get('/open-voting', (req, res) => {
+  const adminKey = process.env.ADMIN_KEY;
+  if (adminKey) {
+    const provided = req.query.key || req.headers['x-admin-key'];
+    if (!provided || provided !== adminKey) {
+      return res.status(401).json({ error: 'Unauthorized. Admin key required.' });
+    }
+  }
+  setVotingClosed(false);
+  res.json({ success: true, closed: false, message: 'Oylama açıldı.' });
+});
+
+// Public route: Check voting status
+app.get('/voting-status', (req, res) => {
+  res.json({ closed: isVotingClosed() });
 });
 
 // Initialise Database then Start Server

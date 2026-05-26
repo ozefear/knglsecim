@@ -45,6 +45,7 @@ const inputLockPassword = document.getElementById('input-lock-password');
 const btnUnlockResults = document.getElementById('btn-unlock-results');
 const thankYouContainer = document.getElementById('thankyou-container');
 const btnThankyouClose = document.getElementById('btn-thankyou-close');
+const votingClosedContainer = document.getElementById('voting-closed');
 
 // Initialization
 document.addEventListener('DOMContentLoaded', async () => {
@@ -63,6 +64,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Do not auto-load results on the main voting page. Results page has its own script (results.js).
+  // Check if voting is closed and show notice
+  try {
+    const resp = await fetch('/voting-status');
+    if (resp.ok) {
+      const s = await resp.json();
+      if (s.closed) {
+        if (gatekeepingContainer) gatekeepingContainer.classList.add('hidden');
+        if (votingClosedContainer) votingClosedContainer.classList.remove('hidden');
+      }
+    }
+  } catch (err) {
+    console.error('Could not check voting status:', err);
+  }
 });
 
 // Check user status and load results in a single consolidated request on load
