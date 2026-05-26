@@ -93,7 +93,11 @@ body {
 }
 
 #svg-turkey path.winner-tie {
-    fill: rgba(255, 255, 255, 0.08) !important;
+    fill: rgba(168, 85, 247, 0.2) !important; /* Premium Translucent Purple for empty/tie */
+    stroke: rgba(168, 85, 247, 0.15) !important;
+}
+#svg-turkey path.winner-tie:hover {
+    fill: rgba(168, 85, 247, 0.4) !important;
 }
 
 /* City Hover Effects */

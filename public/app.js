@@ -129,7 +129,7 @@ voteButtons.forEach(button => {
   button.addEventListener('click', async (e) => {
     const candidate = e.currentTarget.getAttribute('data-candidate');
 
-    knglRename = candidate === 'kngl' ? 'ERAY' : 'HALK';
+    knglRename = candidate === 'kngl' ? 'ERAY' : 'KNGL';
 
     const confirmVote = confirm(`Oyunuzu ${knglRename} tarafına kaydetmek istediğinizden emin misiniz?`);
     if (!confirmVote) return;
@@ -308,7 +308,7 @@ function renderAbroadResults(abroadData) {
       <div class="abroad-candidate-line ${halkLead ? 'winner-line border-red-500/20' : ''}">
         <div class="flex items-center space-x-2 text-red-500 font-extrabold text-[10px]">
           <span class="h-1.5 w-1.5 rounded-full bg-red-500 ${halkLead ? 'animate-pulse' : ''}"></span>
-          <span>HALK</span>
+          <span>KNGL</span>
         </div>
         <span class="text-red-400 font-black text-[11px] ml-4">%${country.halk_percentage.toFixed(1)} <span class="text-slate-500 font-bold text-[9px]">(${country.halk_count.toLocaleString('tr-TR')} Oy)</span></span>
       </div>
@@ -432,7 +432,7 @@ function bindMapEvents(group, cityResult) {
       <div class="flex items-center justify-between text-red-500 text-[10px] ${halkLead ? 'bg-red-500/[0.03] border border-red-500/10 p-1.5 rounded-lg' : 'opacity-70 p-1.5'}">
           <div class="flex items-center space-x-1.5">
               <span class="h-2 w-2 rounded-full bg-red-500 ${halkLead ? 'animate-pulse' : ''}"></span>
-              <span class="font-bold">HALK:</span>
+              <span class="font-bold">KNGL:</span>
           </div>
           <span class="font-extrabold">%${cityResult.halk_percentage.toFixed(1)} <span class="text-slate-500 text-[8px]">(${cityResult.halk_count.toLocaleString('tr-TR')} Oy)</span></span>
       </div>
