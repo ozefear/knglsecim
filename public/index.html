@@ -4,210 +4,206 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>KNGL SOCIAL REFERANDUM 2026 - Oy Ver</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        slate: {
-                            950: '#060913',
-                            900: '#0c101f',
-                            800: '#151b30'
+    <!DOCTYPE html>
+    <html lang="tr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>KNGL SOCIAL REFERANDUM 2026 - Canlı Sonuçlar</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        colors: {
+                            slate: {
+                                950: '#060913',
+                                900: '#0c101f',
+                                800: '#151b30'
+                            }
+                        },
+                        fontFamily: {
+                            sans: ['Outfit', 'Inter', 'sans-serif']
                         }
-                    },
-                    fontFamily: {
-                        sans: ['Outfit', 'Inter', 'sans-serif']
                     }
                 }
             }
-        }
-    </script>
-    <!-- Google Fonts Outfit & Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700;800&family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="style.css">
-</head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden font-sans relative selection:bg-indigo-500/30 selection:text-white">
+        </script>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700;800&family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="/style.css">
+    </head>
+    <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden font-sans relative selection:bg-indigo-500/30 selection:text-white">
 
-    <!-- Premium Background Grid Overlay and Nebula Orbs -->
-    <div class="fixed inset-0 z-0 bg-grid pointer-events-none opacity-[0.9]"></div>
-    <div class="fixed top-[-20%] left-[-15%] w-[60vw] h-[60vw] rounded-full bg-red-600/[0.02] blur-[150px] pointer-events-none z-0"></div>
-    <div class="fixed bottom-[-20%] right-[-15%] w-[60vw] h-[60vw] rounded-full bg-blue-600/[0.02] blur-[150px] pointer-events-none z-0"></div>
-    <div class="fixed top-[35%] left-[25%] w-[45vw] h-[45vw] rounded-full bg-indigo-500/[0.01] blur-[180px] pointer-events-none z-0"></div>
+        <!-- Premium Background -->
+        <div class="fixed inset-0 z-0 bg-grid pointer-events-none opacity-[0.9]"></div>
+        <div class="fixed top-[-20%] left-[-15%] w-[60vw] h-[60vw] rounded-full bg-red-600/[0.02] blur-[150px] pointer-events-none z-0"></div>
+        <div class="fixed bottom-[-20%] right-[-15%] w-[60vw] h-[60vw] rounded-full bg-blue-600/[0.02] blur-[150px] pointer-events-none z-0"></div>
+        <div class="fixed top-[35%] left-[25%] w-[45vw] h-[45vw] rounded-full bg-indigo-500/[0.01] blur-[180px] pointer-events-none z-0"></div>
 
-    <!-- Header (Sleek and Minimal TRT Style) -->
-    <header class="border-b border-white/[0.04] bg-slate-950/40 backdrop-blur-2xl sticky top-0 z-50 transition-all duration-300">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-            <!-- Left Branding -->
-            <div class="flex items-center space-x-3.5">
-                <div class="h-8 w-16 bg-red-600 flex items-center justify-center shadow-lg shadow-red-600/10 border border-red-500/20 rounded-md">
-                    <span class="font-extrabold text-white text-xs tracking-widest">SEÇİM</span>
-                </div>
-                <div class="h-6 w-px bg-white/10"></div>
-                <div>
-                    <h1 class="text-sm font-extrabold tracking-widest text-slate-200 uppercase">KNGL SOCIAL 2026 REFERANDUM</h1>
-                    <p class="text-[9px] font-bold text-indigo-400 tracking-wider uppercase mt-0.5">Canlı Seçim Haritası ve Analiz Ekranı</p>
-                </div>
-            </div>
-            
-            <!-- Right Actions -->
-            <div class="flex items-center space-x-4">
-                <div class="hidden sm:flex items-center space-x-2 text-[9px] font-bold uppercase tracking-wider bg-white/[0.02] border border-white/[0.04] rounded-full px-3 py-1.5">
-                    <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span class="text-slate-400">Veri Akışı Aktif</span>
-                </div>
-                <!-- Test Mode Reset Button -->
-                <button id="btn-reset-test" class="text-[9px] font-extrabold uppercase tracking-widest bg-white/[0.02] hover:bg-white/[0.06] text-slate-300 border border-white/10 hover:border-white/20 px-3.5 py-1.5 rounded-lg transition-all duration-300">
-                    Oylamayı Sıfırla
-                </button>
-            </div>
-        </div>
-    </header>
-
-    <!-- Main Content Wrapper -->
-    <main class="flex-grow flex items-center justify-center p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full z-10 relative">
-
-        <!-- LOADING STATE -->
-        <div id="loading-container" class="flex flex-col items-center justify-center space-y-4 py-24">
-            <div class="relative w-10 h-10">
-                <div class="absolute inset-0 rounded-full border border-white/[0.04]"></div>
-                <div class="absolute inset-0 rounded-full border border-t-indigo-500 animate-spin"></div>
-            </div>
-            <p class="text-slate-500 text-[9px] font-bold tracking-widest uppercase animate-pulse">Altyapı Yapılandırılıyor...</p>
-        </div>
-
-        <!-- 3. ŞİFRE KİLİT EKRANI (PASSWORD LOCK CARD) -->
-        <div id="lock-container" class="hidden w-full max-w-md mx-auto flex flex-col items-center space-y-8 py-12">
-            <div class="w-full bg-slate-900/20 backdrop-blur-2xl border border-white/[0.04] rounded-3xl p-8 sm:p-10 flex flex-col items-center text-center space-y-6 shadow-2xl relative overflow-hidden">
-                <div class="absolute -right-24 -top-24 w-48 h-48 bg-purple-500/5 rounded-full blur-3xl"></div>
-                
-                <!-- Glowing Lock Icon -->
-                <div class="h-16 w-16 rounded-2xl bg-gradient-to-b from-purple-600 to-purple-950 flex items-center justify-center border border-white/10 shadow-lg relative overflow-hidden">
-                    <div class="absolute inset-0 bg-radial-glow-blue opacity-[0.3]"></div>
-                    <svg class="w-8 h-8 text-purple-200 relative z-10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                    </svg>
-                </div>
-                
-                <div class="space-y-2">
-                    <h3 class="text-xl font-extrabold text-white tracking-tight">Canlı Sonuçlar Kilitli</h3>
-                    <p class="text-xs text-slate-400 leading-relaxed font-light">Seçim haritası ve canlı oylar yüksek trafik nedeniyle korumaya alınmıştır. Sonuçları görüntülemek için lütfen erişim şifresini girin.</p>
-                </div>
-                
-                <div class="w-full space-y-4 pt-2">
-                    <input type="password" id="input-lock-password" placeholder="Erişim Şifresi" class="w-full bg-slate-950/60 border border-white/10 focus:border-purple-500/50 rounded-xl px-4 py-3.5 text-sm text-white text-center tracking-widest font-black placeholder:font-light placeholder:tracking-normal focus:outline-none transition-all duration-300">
-                    <button id="btn-unlock-results" class="w-full py-3.5 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white font-extrabold rounded-xl shadow-lg shadow-purple-600/10 hover:shadow-purple-600/30 transition-all duration-300 text-xs tracking-wider uppercase border border-purple-500/20">
-                        Erişimi Aç
-                    </button>
-                </div>
-            </div>
-        </div>
-    
-            <!-- Thank you screen (shown after a vote on main page) -->
-            <div id="thankyou-container" class="hidden w-full max-w-md mx-auto flex flex-col items-center space-y-6 py-12">
-                <div class="w-full bg-slate-900/20 backdrop-blur-2xl border border-white/[0.04] rounded-3xl p-8 sm:p-10 text-center">
-                    <h3 class="text-xl font-extrabold text-white tracking-tight">Teşekkürler — Oy Kaydedildi</h3>
-                    <p class="text-sm text-slate-400 mt-2">Oy verdiğiniz için teşekkür ederiz. Katılımınız kaydedildi.</p>
-                    <button id="btn-thankyou-close" class="mt-6 py-3 px-6 bg-indigo-600 rounded-xl text-white font-bold">Kapat</button>
-                </div>
-            </div>
-
-        <!-- 1. OY VERME EKRANI (GATEKEEPING - ULTRA GIANT PORTRAITS & TEXTS) -->
-        <div id="gatekeeping-container" class="hidden w-full max-w-5xl mx-auto flex flex-col items-center space-y-12 py-6">
-
-            <!-- Large, Borderless, Premium Candidate Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12 w-full justify-center items-stretch mt-4">
-                <!-- Column 1: KNGL (Giant Portrait & Name) -->
-                <div class="group bg-slate-900/20 backdrop-blur-2xl border border-white/[0.03] hover:border-red-500/35 rounded-3xl p-10 sm:p-14 flex flex-col justify-between items-center text-center space-y-10 shadow-2xl shadow-black/60 hover:shadow-red-950/[0.15] transition-all duration-500 relative overflow-hidden">
-                    <div class="absolute -right-24 -top-24 w-64 h-64 bg-red-500/5 rounded-full blur-3xl group-hover:bg-red-500/10 transition-all duration-500"></div>
-                    <div class="space-y-8 flex flex-col items-center w-full">
-                        
-                        <!-- Giant Portrait Image Container -->
-                        <div class="relative shrink-0 mt-2">
-                            <div class="h-48 w-48 sm:h-64 sm:w-64 rounded-3xl bg-gradient-to-b from-red-600 to-red-950 border border-white/10 shadow-2xl relative overflow-hidden group-hover:scale-105 transition-transform duration-500">
-                                <div class="absolute inset-0 bg-radial-glow-red opacity-[0.4] z-10 pointer-events-none"></div>
-                                <img src="halkkngl.png" alt="KNGL" class="w-full h-full object-cover relative z-0">
-                            </div>
-                            <span class="absolute -bottom-4 -right-4 h-12 w-12 rounded-2xl bg-red-600 border-2 border-slate-900 flex items-center justify-center font-black text-lg text-white shadow-2xl">K</span>
-                        </div>
-                        
-                        <div class="pt-4 space-y-1.5">
-                            <h3 class="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight uppercase leading-none text-glow-red">KNGL SOCIAL HAREKETİ</h3>
-                        </div>
+        <!-- Header -->
+        <header class="border-b border-white/[0.04] bg-slate-950/40 backdrop-blur-2xl sticky top-0 z-50 transition-all duration-300">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+                <div class="flex items-center space-x-3.5">
+                    <div class="h-8 w-16 bg-red-600 flex items-center justify-center shadow-lg shadow-red-600/10 border border-red-500/20 rounded-md">
+                        <span class="font-extrabold text-white text-xs tracking-widest">SEÇİM</span>
                     </div>
-                    
-                    <button data-candidate="halk" class="btn-vote w-full py-5 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-black rounded-2xl shadow-lg shadow-red-600/15 hover:shadow-red-600/40 transition-all duration-300 text-xs sm:text-sm tracking-widest uppercase border border-red-500/20 hover:scale-[1.03]">
-                        Oy Ver (KNGL)
-                    </button>
-                </div>
-
-                <!-- Column 2: KNGL (Giant Portrait & Name) -->
-                <div class="group bg-slate-900/20 backdrop-blur-2xl border border-white/[0.03] hover:border-blue-500/35 rounded-3xl p-10 sm:p-14 flex flex-col justify-between items-center text-center space-y-10 shadow-2xl shadow-black/60 hover:shadow-blue-950/[0.15] transition-all duration-500 relative overflow-hidden">
-                    <div class="absolute -right-24 -top-24 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl group-hover:bg-blue-500/10 transition-all duration-500"></div>
-                    <div class="space-y-8 flex flex-col items-center w-full">
-                        
-                        <!-- Giant Portrait Image Container -->
-                        <div class="relative shrink-0 mt-2">
-                            <div class="h-48 w-48 sm:h-64 sm:w-64 rounded-3xl bg-gradient-to-b from-blue-600 to-blue-950 border border-white/10 shadow-2xl relative overflow-hidden group-hover:scale-105 transition-transform duration-500">
-                                <div class="absolute inset-0 bg-radial-glow-blue opacity-[0.3] z-10 pointer-events-none"></div>
-                                <img src="eraykngl.png" alt="Eray Can Özkenar" class="w-full h-full object-cover relative z-0">
-                            </div>
-                            <span class="absolute -bottom-4 -left-4 h-12 w-12 rounded-2xl bg-blue-600 border-2 border-slate-900 flex items-center justify-center font-black text-lg text-white shadow-2xl">E</span>
-                        </div>
-                        
-                        <div class="pt-4 space-y-1.5">
-                            <h3 class="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight uppercase leading-none text-glow-blue">ERAY HÜKÜMETİ</h3>
-                        </div>
+                    <div class="h-6 w-px bg-white/10"></div>
+                    <div>
+                        <h1 class="text-sm font-extrabold tracking-widest text-slate-200 uppercase">KNGL SOCIAL 2026 REFERANDUM</h1>
+                        <p class="text-[9px] font-bold text-indigo-400 tracking-wider uppercase mt-0.5">Canlı Seçim Haritası ve Analiz Ekranı</p>
                     </div>
-                    
-                    <button data-candidate="kngl" class="btn-vote w-full py-5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-black rounded-2xl shadow-lg shadow-blue-600/15 hover:shadow-blue-600/40 transition-all duration-300 text-xs sm:text-sm tracking-widest uppercase border border-blue-500/20 hover:scale-[1.03]">
-                        Oy Ver (ERAY)
-                    </button>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="hidden sm:flex items-center space-x-2 text-[9px] font-bold uppercase tracking-wider bg-white/[0.02] border border-white/[0.04] rounded-full px-3 py-1.5">
+                        <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span class="text-slate-400">Veri Akışı Aktif</span>
+                    </div>
                 </div>
             </div>
-        </div>
+        </header>
 
-        <!-- 2. SONUÇ EKRANI (TRT HABER PRESIDENTIAL HEADER - NO BOX %, ONLY USED VOTES) -->
+        <main class="flex-grow flex items-center justify-center p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full z-10 relative">
+
+            <!-- LOADING STATE -->
+            <div id="loading-container" class="flex flex-col items-center justify-center space-y-4 py-24">
+                <div class="relative w-10 h-10">
+                    <div class="absolute inset-0 rounded-full border border-white/[0.04]"></div>
+                    <div class="absolute inset-0 rounded-full border border-t-indigo-500 animate-spin"></div>
+                </div>
+                <p class="text-slate-500 text-[9px] font-bold tracking-widest uppercase animate-pulse">Altyapı Yapılandırılıyor...</p>
+            </div>
+
+            <!-- PASSWORD LOCK SCREEN -->
+            <div id="lock-container" class="hidden w-full max-w-md mx-auto flex flex-col items-center space-y-8 py-12">
+                <div class="w-full bg-slate-900/20 backdrop-blur-2xl border border-white/[0.04] rounded-3xl p-8 sm:p-10 flex flex-col items-center text-center space-y-6 shadow-2xl relative overflow-hidden">
+                    <div class="absolute -right-24 -top-24 w-48 h-48 bg-purple-500/5 rounded-full blur-3xl"></div>
+                    <div class="h-16 w-16 rounded-2xl bg-gradient-to-b from-purple-600 to-purple-950 flex items-center justify-center border border-white/10 shadow-lg relative overflow-hidden">
+                        <div class="absolute inset-0 bg-radial-glow-blue opacity-[0.3]"></div>
+                        <svg class="w-8 h-8 text-purple-200 relative z-10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                    </div>
+                    <div class="space-y-2">
+                        <h3 class="text-xl font-extrabold text-white tracking-tight">Canlı Sonuçlar Kilitli</h3>
+                        <p class="text-xs text-slate-400 leading-relaxed font-light">Seçim haritası ve canlı oylar yüksek trafik nedeniyle korumaya alınmıştır. Sonuçları görüntülemek için lütfen erişim şifresini girin.</p>
+                    </div>
+                    <div class="w-full space-y-4 pt-2">
+                        <input type="password" id="input-lock-password" placeholder="Erişim Şifresi" class="w-full bg-slate-950/60 border border-white/10 focus:border-purple-500/50 rounded-xl px-4 py-3.5 text-sm text-white text-center tracking-widest font-black placeholder:font-light placeholder:tracking-normal focus:outline-none transition-all duration-300">
+                        <button id="btn-unlock-results" class="w-full py-3.5 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white font-extrabold rounded-xl shadow-lg shadow-purple-600/10 hover:shadow-purple-600/30 transition-all duration-300 text-xs tracking-wider uppercase border border-purple-500/20">
+                            Erişimi Aç
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RESULTS DASHBOARD -->
             <div id="results-container" class="hidden w-full space-y-8 py-2">
-                <!-- Results Dashboard -->
-                <div class="w-full bg-slate-900/20 backdrop-blur-2xl border border-white/[0.04] rounded-3xl p-6 sm:p-8">
-                    <div class="flex items-center justify-between mb-4">
-                        <div>
-                            <h2 class="text-sm font-extrabold uppercase tracking-widest text-slate-200">Canlı Sonuçlar</h2>
-                            <p class="text-[10px] text-slate-400 mt-1">Toplam Oy</p>
+                <!-- UPPER SECTION -->
+                <div class="bg-slate-900/20 backdrop-blur-2xl border border-white/[0.04] rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+                    <div class="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/[0.05] to-transparent"></div>
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                        <!-- LEFT: KNGL -->
+                        <div class="lg:col-span-4 flex flex-row items-center space-x-6 justify-start">
+                            <div class="relative shrink-0">
+                                <div class="h-28 w-28 rounded-2xl bg-gradient-to-b from-red-600 to-red-950 flex items-center justify-center border border-white/10 shadow-lg relative overflow-hidden">
+                                    <div class="absolute inset-0 bg-radial-glow-red opacity-[0.4] z-10 pointer-events-none"></div>
+                                    <img src="/halkkngl.png" alt="KNGL" class="w-full h-full object-cover relative z-0">
+                                </div>
+                                <span class="absolute -bottom-2.5 -right-2.5 h-7 w-7 rounded-xl bg-red-600 border border-slate-950 flex items-center justify-center font-black text-xs text-white shadow-md">K</span>
+                            </div>
+                            <div class="space-y-1">
+                                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider block">ADAY</span>
+                                <h3 class="text-xl font-extrabold text-white tracking-tight leading-none">KNGL SOCIAL HAREKETİ</h3>
+                                <div class="pt-1.5 flex flex-col">
+                                    <span id="halk-percentage" class="text-3xl font-black text-red-500 tracking-tighter text-glow-red leading-none">%0.0</span>
+                                    <span id="halk-votes-count" class="text-[10px] font-bold text-slate-400 mt-1">0 Oy</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="text-right">
-                            <div id="summary-total-votes" class="text-2xl font-extrabold text-white">0</div>
-                            <div class="text-[10px] text-slate-500">Kayıtlı Oy</div>
+                        <!-- CENTER -->
+                        <div class="lg:col-span-4 flex flex-col items-center justify-center space-y-5">
+                            <div class="text-center font-extrabold text-xs text-indigo-400 bg-indigo-500/5 border border-indigo-500/10 px-6 py-2.5 rounded-2xl tracking-widest uppercase shadow-inner">
+                                <span>Toplam Kullanılan Oy:</span>
+                                <span id="summary-total-votes" class="text-white font-black ml-1.5 text-sm text-shadow-indigo">0</span>
+                            </div>
+                            <div class="w-full bg-slate-950 border border-white/[0.03] h-4.5 rounded-full overflow-hidden relative flex shadow-inner shadow-black/80">
+                                <div class="absolute inset-y-0 left-1/2 w-px bg-white/30 z-10"></div>
+                                <div id="halk-progress-bar" class="bg-gradient-to-r from-red-700 to-red-500 h-full transition-all duration-1000 ease-out" style="width: 50%;"></div>
+                                <div id="kngl-progress-bar" class="bg-gradient-to-l from-blue-700 to-blue-500 h-full flex-grow transition-all duration-1000 ease-out" style="width: 50%;"></div>
+                            </div>
+                        </div>
+                        <!-- RIGHT: ERAY -->
+                        <div class="lg:col-span-4 flex flex-row items-center space-x-6 justify-end lg:justify-end">
+                            <div class="text-right space-y-1">
+                                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider block">ADAY</span>
+                                <h3 class="text-xl font-extrabold text-white tracking-tight leading-none">ERAY HÜKÜMETİ</h3>
+                                <div class="pt-1.5 flex flex-col items-end">
+                                    <span id="kngl-percentage" class="text-3xl font-black text-blue-500 tracking-tighter text-glow-blue leading-none">%0.0</span>
+                                    <span id="kngl-votes-count" class="text-[10px] font-bold text-slate-400 mt-1">0 Oy</span>
+                                </div>
+                            </div>
+                            <div class="relative shrink-0">
+                                <div class="h-28 w-28 rounded-2xl bg-gradient-to-b from-blue-600 to-blue-950 flex items-center justify-center border border-white/10 shadow-lg relative overflow-hidden">
+                                    <div class="absolute inset-0 bg-radial-glow-blue opacity-[0.3] z-10 pointer-events-none"></div>
+                                    <img src="/eraykngl.png" alt="Eray Can Özkenar" class="w-full h-full object-cover relative z-0">
+                                </div>
+                                <span class="absolute -bottom-2.5 -left-2.5 h-7 w-7 rounded-xl bg-blue-600 border border-slate-950 flex items-center justify-center font-black text-xs text-white shadow-md">E</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MAP + ABROAD -->
+                <div class="space-y-6">
+                    <div class="bg-slate-900/20 backdrop-blur-2xl border border-white/[0.04] rounded-3xl p-6 sm:p-8 shadow-2xl relative min-h-[500px] overflow-hidden">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-white/[0.02] pb-4 mb-6 gap-2">
+                            <div>
+                                <h3 class="text-xs font-bold tracking-widest text-slate-200 uppercase">İl Bazlı Coğrafi Dağılım</h3>
+                                <p class="text-[9px] text-slate-400 font-semibold tracking-wider uppercase mt-0.5">İllerin oy oranlarını görmek için harita üzerinde gezinebilirsiniz.</p>
+                            </div>
+                            <div class="flex items-center space-x-3 text-[9px] font-bold uppercase tracking-wider">
+                                <div class="flex items-center space-x-1.5">
+                                    <span class="h-2.5 w-2.5 rounded bg-red-600/90 inline-block"></span>
+                                    <span class="text-slate-400">KNGL Önde</span>
+                                </div>
+                                <div class="flex items-center space-x-1.5">
+                                    <span class="h-2.5 w-2.5 rounded bg-blue-600/90 inline-block"></span>
+                                    <span class="text-slate-400">ERAY Önde</span>
+                                </div>
+                                <div class="flex items-center space-x-1.5">
+                                    <span class="h-2.5 w-2.5 rounded bg-purple-500/20 border border-purple-500/30 inline-block"></span>
+                                    <span class="text-slate-400">Oy Yok / Eşit</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="relative w-full flex items-center justify-center p-2 sm:p-4 overflow-hidden flex-grow select-none">
+                            <div id="map-container" class="w-full h-auto max-w-[850px] transition-all duration-300"></div>
                         </div>
                     </div>
 
-                    <!-- Dual Percentages -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center mb-4">
-                        <div class="p-4 bg-slate-900/10 rounded-xl">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <div class="text-xs font-extrabold text-red-400 uppercase">KNGL</div>
-                                    <div id="halk-votes-count" class="text-sm text-slate-300 font-bold">0 Oy</div>
-                                </div>
-                                <div class="text-3xl font-black text-red-400" id="halk-percentage">%0.00</div>
-                            </div>
+                    <div class="bg-slate-900/20 backdrop-blur-2xl border border-white/[0.04] rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+                        <div class="border-b border-white/[0.02] pb-4 mb-6">
+                            <h3 class="text-xs font-bold tracking-widest text-slate-200 uppercase">Yurtdışı Seçim Sonuçları</h3>
+                            <p class="text-[9px] text-slate-400 font-semibold tracking-wider uppercase mt-0.5">Türkiye sınırları dışından katılan seçmenlerin oy dağılımı ülkelere göre listelenmektedir.</p>
                         </div>
-                        <div class="p-4 bg-slate-900/10 rounded-xl">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <div class="text-xs font-extrabold text-blue-400 uppercase">ERAY</div>
-                                    <div id="kngl-votes-count" class="text-sm text-slate-300 font-bold">0 Oy</div>
-                                </div>
-                                <div class="text-3xl font-black text-blue-400" id="kngl-percentage">%0.00</div>
-                            </div>
-                        </div>
+                        <div id="abroad-countries-list" class="flex flex-col space-y-3"></div>
                     </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Tooltip -->
+        <div id="map-tooltip" class="fixed hidden bg-slate-950/95 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-4 shadow-2xl z-[100] pointer-events-none text-xs w-56 shadow-black/80 font-sans transition-all duration-75">
+            <h4 id="tooltip-city-name" class="font-extrabold text-xs border-b border-white/[0.04] pb-1.5 mb-2 text-slate-100 tracking-tight">İstanbul</h4>
+            <div id="tooltip-sorted-content" class="space-y-1.5 font-semibold"></div>
+        </div>
+
+        <script src="/results.js"></script>
+    </body>
+    </html>
 
                     <!-- Progress Bar -->
                     <div class="w-full bg-slate-950/60 border border-white/[0.03] h-4 rounded-full overflow-hidden relative mb-6">
