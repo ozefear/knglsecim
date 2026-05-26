@@ -105,31 +105,45 @@ app.post('/api/vote', async (req, res) => {
   }
 });
 
-// 3. GET /api/results - Fetch overall and city results (Password Protected)
+// 3. GET /api/results - Fetch overall and city results (Consolidated Single Request)
 app.get('/api/results', async (req, res) => {
   try {
-    // Erişim Şifresi Kontrolü (Limit ve Yetki Koruması)
-    const accessPassword = req.headers['x-access-password'];
-    const expectedPassword = process.env.RESULTS_PASSWORD || 'secim2026';
-    
-    if (!accessPassword || accessPassword !== expectedPassword) {
-      return res.status(401).json({ error: 'Geçersiz erişim şifresi! Sonuçları görüntülemek için şifre gereklidir.' });
-    }
-
-    // Only allow seeing results if user has already voted
     const ip = getClientIp(req);
+    // 1. Check if the current IP has voted (always required for frontend state)
     const voted = await db.hasVoted(ip);
 
-    // Strict gatekeeping
-    if (!voted) {
-      return res.status(403).json({ error: 'Sonuçları görebilmek için önce oy kullanmalısınız!' });
+    // 2. Validate the password header
+    const accessPassword = req.headers['x-access-password'];
+    const expectedPassword = process.env.RESULTS_PASSWORD || 'secim2026';
+    const isPasswordCorrect = accessPassword === expectedPassword;
+
+    // 3. If password is wrong or missing, do NOT run expensive database queries for results
+    if (!isPasswordCorrect) {
+      return res.json({
+        voted,
+        results: null,
+        error: 'Şifre doğrulanmadı.'
+      });
     }
 
+    // 4. If password is correct and they have not voted, we still restrict viewing
+    if (!voted) {
+      return res.json({
+        voted,
+        results: null,
+        error: 'Sonuçları görebilmek için önce oy kullanmalısınız!'
+      });
+    }
+
+    // 5. If password is correct and voted, fetch and return full results
     const results = await db.getElectionResults();
-    res.json(results);
+    res.json({
+      voted,
+      results
+    });
   } catch (error) {
-    console.error('Error fetching results API:', error);
-    res.status(500).json({ error: 'Sonuçlar yüklenirken hata oluştu.' });
+    console.error('Error fetching consolidated results API:', error);
+    res.status(500).json({ error: 'Sonuçlar yüklenirken sunucu hatası oluştu.' });
   }
 });
 

@@ -73,32 +73,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   await checkUserStatus();
 });
 
-// Check if user has already voted
+// Check user status and load results in a single consolidated request on load
 async function checkUserStatus() {
-  showLoading(true);
-  try {
-    const response = await fetch('/api/status');
-    const data = await response.json();
-
-    if (data.voted) {
-      // User has voted, check if they have password stored
-      const storedPwd = sessionStorage.getItem('results_password');
-      if (storedPwd) {
-        await loadElectionResults();
-      } else {
-        // Show lock screen to enter password
-        showLoading(false);
-        showLockScreen(true);
-      }
-    } else {
-      // User has not voted, show premium voting screen
-      showLoading(false);
-      showGatekeeper(true);
-    }
-  } catch (error) {
-    console.error('Error checking system status:', error);
-    alert('Sistem bağlantısı sırasında hata oluştu. Lütfen sayfayı yenileyin.');
-  }
+  await loadElectionResults();
 }
 
 // Show/Hide Loading animation
@@ -237,19 +214,39 @@ async function loadElectionResults() {
       return;
     }
 
-    if (!response.ok) {
-      const errData = await response.json();
-      console.error('Gatekeeping restriction:', errData.error);
-      showLoading(false);
-      showGatekeeper(true);
+    const data = await response.json();
+
+    // 1. If the user has NOT voted, they must see the voting gatekeeper screen
+    if (!data.voted) {
       if (pollingInterval) {
         clearInterval(pollingInterval);
         pollingInterval = null;
       }
+      showLoading(false);
+      showGatekeeper(true);
       return;
     }
 
-    electionData = await response.json();
+    // 2. If the user HAS voted, but the password is correct/incorrect
+    if (data.results === null) {
+      // Password was wrong or missing, show lock screen
+      sessionStorage.removeItem('results_password');
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+        pollingInterval = null;
+      }
+      showLoading(false);
+      showLockScreen(true);
+      
+      // Only show error message if they actually entered a password that failed
+      if (password) {
+        alert('Hata: Geçersiz veya süresi dolmuş erişim şifresi!');
+      }
+      return;
+    }
+
+    // 3. User HAS voted and password is correct, paint the results dashboard!
+    electionData = data.results;
 
     // 1. Update general stats cards (TRT Haber Presidential Header Style - NO BOX %)
     document.getElementById('summary-total-votes').textContent = Number(electionData.total_votes).toLocaleString('tr-TR');
