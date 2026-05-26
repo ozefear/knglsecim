@@ -72,10 +72,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (s.closed) {
         if (gatekeepingContainer) gatekeepingContainer.classList.add('hidden');
         if (votingClosedContainer) votingClosedContainer.classList.remove('hidden');
+      } else {
+        if (gatekeepingContainer) gatekeepingContainer.classList.remove('hidden');
       }
+    } else {
+      if (gatekeepingContainer) gatekeepingContainer.classList.remove('hidden');
     }
   } catch (err) {
     console.error('Could not check voting status:', err);
+    if (gatekeepingContainer) gatekeepingContainer.classList.remove('hidden');
+  } finally {
+    showLoading(false);
   }
 });
 
