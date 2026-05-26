@@ -12,7 +12,10 @@ function getDb() {
     console.log('Connecting to PostgreSQL database...');
     const pool = new Pool({
       connectionString: process.env.DATABASE_URL,
-      ssl: { rejectUnauthorized: false }
+      ssl: { rejectUnauthorized: false },
+      max: 10,                       // Her serverless instance en fazla 10 bağlantı açabilir (PgBouncer 200 limitini korur)
+      idleTimeoutMillis: 10000,      // Boşta kalan bağlantılar 10 saniyede kapatılır
+      connectionTimeoutMillis: 5000, // Bağlantı 5 saniyede açılamazsa hata fırlatılır (kuyrukta sonsuz beklenmez)
     });
     dbInstance = {
       type: 'postgres',
@@ -183,13 +186,26 @@ async function seedDataIfEmpty() {
   }
 }
 
-// Check if IP has already voted
+// In-memory cache for voted IPs to avoid redundant database queries under flood attacks
+const votedIpCache = new Set();
+
+// Check if IP has already voted (checks in-memory cache FIRST, then database)
 async function hasVoted(ip) {
+  // 1. If IP is in the in-memory cache, return true instantly (0 database cost!)
+  if (votedIpCache.has(ip)) {
+    return true;
+  }
+
+  // 2. Otherwise, check the database
   const db = getDb();
   const queryText = 'SELECT id FROM votes WHERE ip = $1 LIMIT 1';
   try {
     const result = await db.query(queryText, [ip]);
-    return result.rows.length > 0;
+    const voted = result.rows.length > 0;
+    if (voted) {
+      votedIpCache.add(ip); // Cache it so we never query for this IP again!
+    }
+    return voted;
   } catch (error) {
     console.error('Error checking vote status:', error);
     return false;
@@ -206,10 +222,12 @@ async function castVote(ip, candidate, cityCode) {
     } else {
       await db.run(queryText, [ip, candidate, cityCode]);
     }
+    votedIpCache.add(ip); // Cache immediately after successful vote
     return true;
   } catch (error) {
     if (error.message && (error.message.includes('UNIQUE') || error.message.includes('duplicate key'))) {
       console.warn(`Double vote attempt blocked for IP: ${ip}`);
+      votedIpCache.add(ip); // Also cache on duplicate key (they already voted)
       return false;
     }
     console.error('Error casting vote:', error);
@@ -227,6 +245,7 @@ async function resetVote(ip) {
     } else {
       await db.run(queryText, [ip]);
     }
+    votedIpCache.delete(ip); // Clear from in-memory cache too
     return true;
   } catch (error) {
     console.error('Error resetting vote:', error);

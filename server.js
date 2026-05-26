@@ -25,6 +25,69 @@ function getClientIp(req) {
   return req.ip || req.connection.remoteAddress || '127.0.0.1';
 }
 
+// In-memory store for failed password attempts to prevent brute force
+const failedAttemptsStore = new Map(); // ip -> { count, lockUntil }
+
+function checkBruteForce(ip) {
+  const now = Date.now();
+  const record = failedAttemptsStore.get(ip);
+  if (record && record.lockUntil && record.lockUntil > now) {
+    const remainingMin = Math.ceil((record.lockUntil - now) / 60000);
+    return { blocked: true, remainingMin };
+  }
+  return { blocked: false };
+}
+
+function recordFailedAttempt(ip) {
+  const now = Date.now();
+  let record = failedAttemptsStore.get(ip);
+  if (!record || (record.lockUntil && record.lockUntil < now)) {
+    record = { count: 0, lockUntil: 0 };
+  }
+  record.count += 1;
+  if (record.count >= 5) {
+    record.lockUntil = now + 15 * 60 * 1000; // Lock for 15 minutes
+  }
+  failedAttemptsStore.set(ip, record);
+  return record;
+}
+
+function clearFailedAttempts(ip) {
+  failedAttemptsStore.delete(ip);
+}
+
+// In-memory store for voting request tracking to prevent automated flooding/DDoS
+const voteFloodStore = new Map(); // ip -> { count, windowStart, blockUntil }
+
+function checkVoteFlood(ip) {
+  const now = Date.now();
+  const record = voteFloodStore.get(ip);
+  if (record && record.blockUntil && record.blockUntil > now) {
+    const remainingMin = Math.ceil((record.blockUntil - now) / 60000);
+    return { blocked: true, remainingMin };
+  }
+  return { blocked: false };
+}
+
+function trackVoteRequest(ip) {
+  const now = Date.now();
+  let record = voteFloodStore.get(ip);
+  
+  if (!record || (now - record.windowStart > 60 * 1000)) {
+    record = { count: 0, windowStart: now, blockUntil: 0 };
+  }
+  
+  record.count += 1;
+  
+  // If an IP makes more than 5 requests to /api/vote within 1 minute, block it for 10 minutes!
+  if (record.count > 5) {
+    record.blockUntil = now + 10 * 60 * 1000;
+  }
+  
+  voteFloodStore.set(ip, record);
+  return record;
+}
+
 // 1. GET /api/status - Check if client IP has voted
 app.get('/api/status', async (req, res) => {
   try {
@@ -76,6 +139,22 @@ app.post('/api/vote', async (req, res) => {
   const ip = getClientIp(req);
   const cityCode = getClientCityCode(req);
 
+  // 1. Bot Flood Protection: Check if IP is currently blocked
+  const floodCheck = checkVoteFlood(ip);
+  if (floodCheck.blocked) {
+    return res.status(429).json({ 
+      error: `Çok fazla istek algılandı. Güvenlik kalkanı nedeniyle cihazınız ${floodCheck.remainingMin} dakika engellendi.` 
+    });
+  }
+
+  // 2. Track request and block if it exceeds 5 requests/min limit
+  const record = trackVoteRequest(ip);
+  if (record.blockUntil > 0) {
+    return res.status(429).json({ 
+      error: 'Olağandışı yoğunlukta istek gönderdiniz. Güvenlik kalkanı nedeniyle cihazınız 10 dakika engellendi.' 
+    });
+  }
+
   // Validation
   if (!candidate || !['halk', 'kngl'].includes(candidate)) {
     return res.status(400).json({ error: 'Geçersiz aday seçimi.' });
@@ -112,13 +191,22 @@ app.get('/api/results', async (req, res) => {
     // 1. Check if the current IP has voted (always required for frontend state)
     const voted = await db.hasVoted(ip);
 
-    // 2. Validate the password header
+    // 2. Brute-force protection: Check if IP is currently blocked
+    const bruteCheck = checkBruteForce(ip);
+    if (bruteCheck.blocked) {
+      return res.json({
+        voted,
+        results: null,
+        error: `Çok fazla hatalı şifre denemesi. Cihazınız ${bruteCheck.remainingMin} dakika kilitlendi.`
+      });
+    }
+
+    // 3. Validate the password header
     const accessPassword = req.headers['x-access-password'];
     const expectedPassword = process.env.RESULTS_PASSWORD || 'secim2026';
-    const isPasswordCorrect = accessPassword === expectedPassword;
-
-    // 3. If password is wrong or missing, do NOT run expensive database queries for results
-    if (!isPasswordCorrect) {
+    
+    // If no password is provided in header, do not treat it as a failed attempt, just prompt (saves users checking status on load)
+    if (!accessPassword) {
       return res.json({
         voted,
         results: null,
@@ -126,7 +214,27 @@ app.get('/api/results', async (req, res) => {
       });
     }
 
-    // 4. If password is correct and they have not voted, we still restrict viewing
+    const isPasswordCorrect = accessPassword === expectedPassword;
+
+    // 4. If password is wrong, record failed attempt and block if limit reached
+    if (!isPasswordCorrect) {
+      const record = recordFailedAttempt(ip);
+      const remainingAttempts = Math.max(0, 5 - record.count);
+      const errorMsg = remainingAttempts === 0
+        ? 'Çok fazla hatalı şifre denemesi. Cihazınız 15 dakika kilitlendi.'
+        : `Hatalı şifre. Kalan deneme hakkınız: ${remainingAttempts}`;
+      
+      return res.json({
+        voted,
+        results: null,
+        error: errorMsg
+      });
+    }
+
+    // 5. If password is correct, clear any failed attempts
+    clearFailedAttempts(ip);
+
+    // 6. If they have not voted, we still restrict viewing
     if (!voted) {
       return res.json({
         voted,
@@ -135,7 +243,7 @@ app.get('/api/results', async (req, res) => {
       });
     }
 
-    // 5. If password is correct and voted, fetch and return full results
+    // 7. Fetch and return full results
     const results = await db.getElectionResults();
     res.json({
       voted,

@@ -240,7 +240,7 @@ async function loadElectionResults() {
       
       // Only show error message if they actually entered a password that failed
       if (password) {
-        alert('Hata: Geçersiz veya süresi dolmuş erişim şifresi!');
+        alert(data.error || 'Hata: Geçersiz veya süresi dolmuş erişim şifresi!');
       }
       return;
     }
