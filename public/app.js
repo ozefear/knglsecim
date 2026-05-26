@@ -31,14 +31,18 @@ const TURKEY_CITIES = [
 
 // Global State
 let electionData = null;
+let pollingInterval = null;
 
 // DOM Elements
 const loadingContainer = document.getElementById('loading-container');
 const gatekeepingContainer = document.getElementById('gatekeeping-container');
 const resultsContainer = document.getElementById('results-container');
+const lockContainer = document.getElementById('lock-container');
 const btnResetTest = document.getElementById('btn-reset-test');
 const mapTooltip = document.getElementById('map-tooltip');
 const abroadCountriesList = document.getElementById('abroad-countries-list');
+const inputLockPassword = document.getElementById('input-lock-password');
+const btnUnlockResults = document.getElementById('btn-unlock-results');
 
 // Initialization
 document.addEventListener('DOMContentLoaded', async () => {
@@ -47,6 +51,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     const resetBtn = document.getElementById('btn-reset-test');
     if (resetBtn) resetBtn.remove();
   }
+
+  // Bind Unlock Button Click
+  btnUnlockResults.addEventListener('click', async () => {
+    const pwd = inputLockPassword.value.trim();
+    if (!pwd) {
+      alert('Lütfen şifreyi boş bırakmayın!');
+      return;
+    }
+    sessionStorage.setItem('results_password', pwd);
+    await loadElectionResults();
+  });
+
+  // Bind Unlock Input Enter Key
+  inputLockPassword.addEventListener('keypress', async (e) => {
+    if (e.key === 'Enter') {
+      btnUnlockResults.click();
+    }
+  });
+
   await checkUserStatus();
 });
 
@@ -58,8 +81,15 @@ async function checkUserStatus() {
     const data = await response.json();
 
     if (data.voted) {
-      // User has voted, load results dashboard immediately
-      await loadElectionResults();
+      // User has voted, check if they have password stored
+      const storedPwd = sessionStorage.getItem('results_password');
+      if (storedPwd) {
+        await loadElectionResults();
+      } else {
+        // Show lock screen to enter password
+        showLoading(false);
+        showLockScreen(true);
+      }
     } else {
       // User has not voted, show premium voting screen
       showLoading(false);
@@ -77,6 +107,7 @@ function showLoading(show) {
     loadingContainer.classList.remove('hidden');
     gatekeepingContainer.classList.add('hidden');
     resultsContainer.classList.add('hidden');
+    lockContainer.classList.add('hidden');
   } else {
     loadingContainer.classList.add('hidden');
   }
@@ -87,8 +118,20 @@ function showGatekeeper(show) {
   if (show) {
     gatekeepingContainer.classList.remove('hidden');
     resultsContainer.classList.add('hidden');
+    lockContainer.classList.add('hidden');
   } else {
     gatekeepingContainer.classList.add('hidden');
+  }
+}
+
+// Show/Hide Lock Screen
+function showLockScreen(show) {
+  if (show) {
+    lockContainer.classList.remove('hidden');
+    gatekeepingContainer.classList.add('hidden');
+    resultsContainer.classList.add('hidden');
+  } else {
+    lockContainer.classList.add('hidden');
   }
 }
 
@@ -97,6 +140,7 @@ function showResults(show) {
   if (show) {
     resultsContainer.classList.remove('hidden');
     gatekeepingContainer.classList.add('hidden');
+    lockContainer.classList.add('hidden');
   } else {
     resultsContainer.classList.add('hidden');
   }
@@ -147,8 +191,9 @@ voteButtons.forEach(button => {
         }
 
         alert(`Oyunuz başarıyla kaydedildi!`);
-        // Load and transition to election dashboard results
-        await loadElectionResults();
+        // Oy kullandıktan sonra sonuçları şifreyle açması için kilit ekranına yönlendir!
+        showLoading(false);
+        showLockScreen(true);
       } else {
         alert(data.error || 'Oy kaydı başarısız oldu.');
         showLoading(false);
@@ -165,14 +210,42 @@ voteButtons.forEach(button => {
 
 // Load results and paint dashboard components
 async function loadElectionResults() {
-  showLoading(true);
+  const isFirstLoad = !electionData;
+  if (isFirstLoad) {
+    showLoading(true);
+  }
+
   try {
-    const response = await fetch('/api/results');
+    const password = sessionStorage.getItem('results_password') || '';
+    const response = await fetch('/api/results', {
+      headers: { 'x-access-password': password }
+    });
+
+    if (response.status === 401) {
+      sessionStorage.removeItem('results_password');
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+        pollingInterval = null;
+      }
+      showLoading(false);
+      showLockScreen(true);
+      if (!isFirstLoad) {
+        alert('Hata: Geçersiz veya süresi dolmuş erişim şifresi!');
+      } else {
+        alert('Hata: Geçersiz erişim şifresi!');
+      }
+      return;
+    }
+
     if (!response.ok) {
       const errData = await response.json();
       console.error('Gatekeeping restriction:', errData.error);
       showLoading(false);
       showGatekeeper(true);
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+        pollingInterval = null;
+      }
       return;
     }
 
@@ -199,12 +272,22 @@ async function loadElectionResults() {
     // 4. Load and paint interactive SVG Turkey map
     await loadAndColorTurkeyMap();
 
+    // Start 15s polling if not already started
+    if (!pollingInterval) {
+      pollingInterval = setInterval(loadElectionResults, 15000);
+      console.log('Polled data reloading started. Every 15 seconds.');
+    }
+
     showLoading(false);
     showResults(true);
 
   } catch (error) {
     console.error('Error loading results dashboard:', error);
     alert('Seçim verileri yüklenirken hata oluştu.');
+    if (pollingInterval) {
+      clearInterval(pollingInterval);
+      pollingInterval = null;
+    }
   }
 }
 

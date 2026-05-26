@@ -105,9 +105,17 @@ app.post('/api/vote', async (req, res) => {
   }
 });
 
-// 3. GET /api/results - Fetch overall and city results
+// 3. GET /api/results - Fetch overall and city results (Password Protected)
 app.get('/api/results', async (req, res) => {
   try {
+    // Erişim Şifresi Kontrolü (Limit ve Yetki Koruması)
+    const accessPassword = req.headers['x-access-password'];
+    const expectedPassword = process.env.RESULTS_PASSWORD || 'secim2026';
+    
+    if (!accessPassword || accessPassword !== expectedPassword) {
+      return res.status(401).json({ error: 'Geçersiz erişim şifresi! Sonuçları görüntülemek için şifre gereklidir.' });
+    }
+
     // Only allow seeing results if user has already voted
     const ip = getClientIp(req);
     const voted = await db.hasVoted(ip);
