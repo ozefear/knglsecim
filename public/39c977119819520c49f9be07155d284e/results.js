@@ -35,46 +35,46 @@ let pollingInterval = null;
 
 // DOM Elements
 const loadingContainer = document.getElementById('loading-container');
-const gatekeepingContainer = document.getElementById('gatekeeping-container');
 const resultsContainer = document.getElementById('results-container');
 const lockContainer = document.getElementById('lock-container');
-const btnResetTest = document.getElementById('btn-reset-test');
 const mapTooltip = document.getElementById('map-tooltip');
 const abroadCountriesList = document.getElementById('abroad-countries-list');
 const inputLockPassword = document.getElementById('input-lock-password');
 const btnUnlockResults = document.getElementById('btn-unlock-results');
-const thankYouContainer = document.getElementById('thankyou-container');
-const btnThankyouClose = document.getElementById('btn-thankyou-close');
 
 // Initialization
 document.addEventListener('DOMContentLoaded', async () => {
-  // Remove reset button in production-like hosts
-  if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-    const resetBtn = document.getElementById('btn-reset-test');
-    if (resetBtn) resetBtn.remove();
-  }
+  // Bind Unlock Button Click
+  btnUnlockResults.addEventListener('click', async () => {
+    const pwd = inputLockPassword.value.trim();
+    if (!pwd) {
+      alert('Lütfen şifreyi boş bırakmayın!');
+      return;
+    }
+    sessionStorage.setItem('results_password', pwd);
+    await loadElectionResults();
+  });
 
-  // If thank you close button exists, bind it
-  if (btnThankyouClose) {
-    btnThankyouClose.addEventListener('click', () => {
-      if (thankYouContainer) thankYouContainer.classList.add('hidden');
-      if (gatekeepingContainer) gatekeepingContainer.classList.remove('hidden');
-    });
-  }
+  // Bind Unlock Input Enter Key
+  inputLockPassword.addEventListener('keypress', async (e) => {
+    if (e.key === 'Enter') {
+      btnUnlockResults.click();
+    }
+  });
 
-  // Do not auto-load results on the main voting page. Results page has its own script (results.js).
+  // Check if password already stored in session
+  const existingPwd = sessionStorage.getItem('results_password');
+  if (existingPwd) {
+    await loadElectionResults();
+  } else {
+    showLoading(false);
+    showLockScreen(true);
+  }
 });
 
-// Check user status and load results in a single consolidated request on load
-async function checkUserStatus() {
-  await loadElectionResults();
-}
-
-// Show/Hide Loading animation
 function showLoading(show) {
   if (show) {
     loadingContainer.classList.remove('hidden');
-    gatekeepingContainer.classList.add('hidden');
     resultsContainer.classList.add('hidden');
     lockContainer.classList.add('hidden');
   } else {
@@ -82,103 +82,24 @@ function showLoading(show) {
   }
 }
 
-// Show/Hide Gatekeeper screen
-function showGatekeeper(show) {
-  if (show) {
-    gatekeepingContainer.classList.remove('hidden');
-    resultsContainer.classList.add('hidden');
-    lockContainer.classList.add('hidden');
-  } else {
-    gatekeepingContainer.classList.add('hidden');
-  }
-}
-
-// Show/Hide Lock Screen
 function showLockScreen(show) {
   if (show) {
     lockContainer.classList.remove('hidden');
-    gatekeepingContainer.classList.add('hidden');
     resultsContainer.classList.add('hidden');
   } else {
     lockContainer.classList.add('hidden');
   }
 }
 
-// Show/Hide Dashboard Results
 function showResults(show) {
   if (show) {
     resultsContainer.classList.remove('hidden');
-    gatekeepingContainer.classList.add('hidden');
     lockContainer.classList.add('hidden');
   } else {
     resultsContainer.classList.add('hidden');
   }
 }
 
-// Handle Instant Vote Button Clicks
-const voteButtons = document.querySelectorAll('.btn-vote');
-voteButtons.forEach(button => {
-  button.addEventListener('click', async (e) => {
-    const candidate = e.currentTarget.getAttribute('data-candidate');
-
-    knglRename = candidate === 'kngl' ? 'ERAY' : 'KNGL';
-
-    const confirmVote = confirm(`Oyunuzu ${knglRename} tarafına kaydetmek istediğinizden emin misiniz?`);
-    if (!confirmVote) return;
-
-    // Send vote
-    showLoading(true);
-    try {
-      const response = await fetch('/api/vote', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ candidate })
-      });
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        // Resolve city name or country name from city_code
-        let locationName = 'Bilinmeyen Konum';
-        const cityCode = data.city_code;
-        
-        const abroadCountriesMap = {
-          'DE': 'Almanya',
-          'FR': 'Fransa',
-          'NL': 'Hollanda',
-          'GB': 'İngiltere',
-          'US': 'ABD',
-          'OT': 'Yurtdışı (Diğer Ülkeler)'
-        };
-        
-        if (abroadCountriesMap[cityCode]) {
-          locationName = `Yurtdışı / ${abroadCountriesMap[cityCode]}`;
-        } else {
-          const foundCity = TURKEY_CITIES.find(c => c.code === cityCode);
-          if (foundCity) {
-            locationName = `${foundCity.name} (Plaka: ${foundCity.code})`;
-          }
-        }
-
-        alert(`Oyunuz başarıyla kaydedildi!`);
-        // On main voting page: end flow and show thank you message (results page is separate)
-        showLoading(false);
-        if (gatekeepingContainer) gatekeepingContainer.classList.add('hidden');
-        if (thankYouContainer) thankYouContainer.classList.remove('hidden');
-      } else {
-        alert(data.error || 'Oy kaydı başarısız oldu.');
-        showLoading(false);
-        showGatekeeper(true);
-      }
-    } catch (error) {
-      console.error('Error submitting vote:', error);
-      alert('Oy kaydı sırasında sunucu hatası oluştu.');
-      showLoading(false);
-      showGatekeeper(true);
-    }
-  });
-});
-
-// Load results and paint dashboard components
 async function loadElectionResults() {
   const isFirstLoad = !electionData;
   if (isFirstLoad) {
@@ -191,38 +112,9 @@ async function loadElectionResults() {
       headers: { 'x-access-password': password }
     });
 
-    if (response.status === 401) {
-      sessionStorage.removeItem('results_password');
-      if (pollingInterval) {
-        clearInterval(pollingInterval);
-        pollingInterval = null;
-      }
-      showLoading(false);
-      showLockScreen(true);
-      if (!isFirstLoad) {
-        alert('Hata: Geçersiz veya süresi dolmuş erişim şifresi!');
-      } else {
-        alert('Hata: Geçersiz erişim şifresi!');
-      }
-      return;
-    }
-
     const data = await response.json();
 
-    // 1. If the user has NOT voted, they must see the voting gatekeeper screen
-    if (!data.voted) {
-      if (pollingInterval) {
-        clearInterval(pollingInterval);
-        pollingInterval = null;
-      }
-      showLoading(false);
-      showGatekeeper(true);
-      return;
-    }
-
-    // 2. If the user HAS voted, but the password is correct/incorrect
     if (data.results === null) {
-      // Password was wrong or missing, show lock screen
       sessionStorage.removeItem('results_password');
       if (pollingInterval) {
         clearInterval(pollingInterval);
@@ -230,39 +122,28 @@ async function loadElectionResults() {
       }
       showLoading(false);
       showLockScreen(true);
-      
-      // Only show error message if they actually entered a password that failed
       if (password) {
         alert(data.error || 'Hata: Geçersiz veya süresi dolmuş erişim şifresi!');
       }
       return;
     }
 
-    // 3. User HAS voted and password is correct, paint the results dashboard!
     electionData = data.results;
 
-    // 1. Update general stats cards (TRT Haber Presidential Header Style - NO BOX %)
     document.getElementById('summary-total-votes').textContent = Number(electionData.total_votes).toLocaleString('tr-TR');
-    
     document.getElementById('halk-percentage').textContent = `%${electionData.halk_percentage.toFixed(2)}`;
     document.getElementById('halk-votes-count').textContent = `${Number(electionData.halk_votes).toLocaleString('tr-TR')} Oy`;
-    
     document.getElementById('kngl-percentage').textContent = `%${electionData.kngl_percentage.toFixed(2)}`;
     document.getElementById('kngl-votes-count').textContent = `${Number(electionData.kngl_votes).toLocaleString('tr-TR')} Oy`;
 
-    // 2. Update Dual Progress Bar
     const halkPct = electionData.halk_percentage;
     const knglPct = electionData.kngl_percentage;
     document.getElementById('halk-progress-bar').style.width = `${halkPct}%`;
     document.getElementById('kngl-progress-bar').style.width = `${knglPct}%`;
 
-    // 3. Populate Abroad (Yurtdışı) Results List dynamically (2 lines/candidates per card)
     renderAbroadResults(electionData.abroad);
-
-    // 4. Load and paint interactive SVG Turkey map
     await loadAndColorTurkeyMap();
 
-    // Start 15s polling if not already started
     if (!pollingInterval) {
       pollingInterval = setInterval(loadElectionResults, 15000);
       console.log('Polled data reloading started. Every 15 seconds.');
@@ -281,22 +162,18 @@ async function loadElectionResults() {
   }
 }
 
-// Render Abroad / Yurtdışı oyları vertical rows list
 function renderAbroadResults(abroadData) {
   abroadCountriesList.innerHTML = '';
-  
   if (!abroadData || abroadData.length === 0) {
     abroadCountriesList.innerHTML = '<p class="text-xs text-slate-500 uppercase tracking-widest text-center py-6">Yurtdışı oy verisi bulunmamaktadır.</p>';
     return;
   }
 
   abroadData.forEach(country => {
-    // Determine winner details
     const halkLead = country.halk_percentage >= country.kngl_percentage;
     const progressHalk = country.halk_percentage;
     const progressKngl = country.kngl_percentage;
 
-    // Generate lines sorted by who is leading in that country
     const halkHtml = `
       <div class="abroad-candidate-line ${halkLead ? 'winner-line border-red-500/20' : ''}">
         <div class="flex items-center space-x-2 text-red-500 font-extrabold text-[10px]">
@@ -317,14 +194,8 @@ function renderAbroadResults(abroadData) {
       </div>
     `;
 
-    let linesMarkup = '';
-    if (halkLead) {
-      linesMarkup = halkHtml + knglHtml;
-    } else {
-      linesMarkup = knglHtml + halkHtml;
-    }
+    let linesMarkup = halkLead ? halkHtml + knglHtml : knglHtml + halkHtml;
 
-    // Determine the progress bar layout dynamically (empty countries show light purple)
     let progressBarHtml = '';
     if (country.total_votes === 0) {
       progressBarHtml = `<div class="w-full bg-purple-500/20 border border-purple-500/10 h-full rounded-full animate-pulse-slow"></div>`;
@@ -339,7 +210,6 @@ function renderAbroadResults(abroadData) {
     const row = document.createElement('div');
     row.className = 'abroad-row';
     row.innerHTML = `
-      <!-- Left: Country Info -->
       <div class="flex items-center space-x-4 min-w-[200px]">
         <div class="h-10 w-10 rounded-xl bg-white/[0.02] border border-white/[0.05] flex items-center justify-center font-black text-xs text-slate-300">
           ${country.country_code}
@@ -349,31 +219,23 @@ function renderAbroadResults(abroadData) {
           <span class="text-[9px] font-extrabold text-slate-500 uppercase tracking-wider mt-0.5 block">${Number(country.total_votes).toLocaleString('tr-TR')} Toplam Oy</span>
         </div>
       </div>
-
-      <!-- Center: Mini dual progress bar comparison (empty is light purple) -->
       <div class="flex-grow max-w-md hidden md:block">
         <div class="w-full bg-slate-950/60 border border-white/[0.03] h-2.5 rounded-full overflow-hidden relative flex">
           ${progressBarHtml}
         </div>
       </div>
-
-      <!-- Right: Candidate columns (The 2 lines layout) -->
       <div class="flex flex-col sm:flex-row gap-2 sm:items-center sm:space-x-3">
         ${linesMarkup}
       </div>
     `;
-    
     abroadCountriesList.appendChild(row);
   });
 }
 
-// Fetch and load Turkey SVG map dynamically inline
 async function loadAndColorTurkeyMap() {
   const container = document.getElementById('map-container');
-  
   if (container.children.length === 0) {
     try {
-      console.log('Fetching public/turkey.svg dynamically...');
       const response = await fetch('/turkey.svg');
       if (!response.ok) throw new Error('Failed to load turkey.svg map');
       const svgText = await response.text();
@@ -385,17 +247,13 @@ async function loadAndColorTurkeyMap() {
     }
   }
 
-  // Paint the cities based on domestic electionData
   const cityDataList = electionData.cities;
-  
   cityDataList.forEach(city => {
     const cityGroup = document.querySelector(`g[data-city-code="${city.city_code}"]`);
-    
     if (cityGroup) {
       const paths = cityGroup.querySelectorAll('path');
       paths.forEach(path => {
         path.classList.remove('winner-halk', 'winner-kngl', 'winner-tie');
-        
         if (city.winner === 'halk') {
           path.classList.add('winner-halk');
         } else if (city.winner === 'kngl') {
@@ -404,23 +262,17 @@ async function loadAndColorTurkeyMap() {
           path.classList.add('winner-tie');
         }
       });
-
-      // Bind dynamic custom interactive events to the group elements
       bindMapEvents(cityGroup, city);
     }
   });
 }
 
-// Bind Map interactive hover mouse events for province grouping (sorted tooltip content)
 function bindMapEvents(group, cityResult) {
   const cityName = group.getAttribute('data-city-name') || TURKEY_CITIES.find(c => c.code === cityResult.city_code).name;
   const halkLead = cityResult.halk_percentage >= cityResult.kngl_percentage;
 
   group.addEventListener('mouseenter', () => {
-    // Populate city name
     document.getElementById('tooltip-city-name').textContent = `${cityResult.city_code} - ${cityName}`;
-    
-    // Generate tooltip candidates lines sorted by who is leading in this city
     const halkHtml = `
       <div class="flex items-center justify-between text-red-500 text-[10px] ${halkLead ? 'bg-red-500/[0.03] border border-red-500/10 p-1.5 rounded-lg' : 'opacity-70 p-1.5'}">
           <div class="flex items-center space-x-1.5">
@@ -430,7 +282,6 @@ function bindMapEvents(group, cityResult) {
           <span class="font-extrabold">%${cityResult.halk_percentage.toFixed(1)} <span class="text-slate-500 text-[8px]">(${cityResult.halk_count.toLocaleString('tr-TR')} Oy)</span></span>
       </div>
     `;
-
     const knglHtml = `
       <div class="flex items-center justify-between text-blue-500 text-[10px] ${!halkLead ? 'bg-blue-500/[0.03] border border-blue-500/10 p-1.5 rounded-lg' : 'opacity-70 p-1.5'}">
           <div class="flex items-center space-x-1.5">
@@ -440,29 +291,23 @@ function bindMapEvents(group, cityResult) {
           <span class="font-extrabold">%${cityResult.kngl_percentage.toFixed(1)} <span class="text-slate-500 text-[8px]">(${cityResult.kngl_count.toLocaleString('tr-TR')} Oy)</span></span>
       </div>
     `;
-
     const totalHtml = `
       <div class="flex justify-between items-center text-slate-400 text-[9px] border-t border-white/[0.04] pt-2 mt-2 font-bold uppercase tracking-wider">
           <span>Toplam Oy:</span>
           <span class="text-slate-300 font-extrabold">${cityResult.total_votes.toLocaleString('tr-TR')}</span>
       </div>
     `;
-
     const contentEl = document.getElementById('tooltip-sorted-content');
-    
-    // Sort and inject content dynamically so leading candidate is at the top
     if (halkLead) {
       contentEl.innerHTML = halkHtml + knglHtml + totalHtml;
     } else {
       contentEl.innerHTML = knglHtml + halkHtml + totalHtml;
     }
-    
     mapTooltip.classList.remove('hidden');
     mapTooltip.classList.add('flex', 'flex-col');
   });
 
   group.addEventListener('mousemove', (e) => {
-    // Position floating tooltip next to mouse using fixed viewport coordinates
     const offset = 12;
     mapTooltip.style.left = `${e.clientX}px`;
     mapTooltip.style.top = `${e.clientY - offset}px`;
@@ -470,27 +315,5 @@ function bindMapEvents(group, cityResult) {
 
   group.addEventListener('mouseleave', () => {
     mapTooltip.classList.add('hidden');
-  });
-}
-
-// Handle Test Mode Reset Button
-if (btnResetTest) {
-  btnResetTest.addEventListener('click', async () => {
-  const confirmReset = confirm('UYARI: Mevcut cihazınızın oy kaydını silerek tekrar oy kullanma moduna dönmek istiyor musunuz? Bu işlem testleri kolaylaştırmak içindir.');
-  if (!confirmReset) return;
-
-  try {
-    const response = await fetch('/api/reset-test');
-    const data = await response.json();
-    if (response.ok && data.success) {
-      alert(data.message);
-      window.location.reload();
-    } else {
-      alert('Sıfırlama başarısız oldu.');
-    }
-  } catch (error) {
-    console.error('Error resetting test mode:', error);
-    alert('Sıfırlama işlemi sırasında sunucu hatası oluştu.');
-  }
   });
 }
