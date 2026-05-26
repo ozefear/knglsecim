@@ -127,6 +127,11 @@ app.get('/api/results', async (req, res) => {
 
 // 4. GET /api/reset-test - Delete vote for client IP (for testing purposes)
 app.get('/api/reset-test', async (req, res) => {
+  // Üretim ortamında (production/PostgreSQL) sıfırlama işlemini tamamen engelle!
+  if (process.env.DATABASE_URL) {
+    return res.status(403).json({ error: 'Bu işlem canlı üretim ortamında devre dışıdır.' });
+  }
+
   try {
     const ip = getClientIp(req);
     await db.resetVote(ip);

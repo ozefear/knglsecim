@@ -42,6 +42,11 @@ const abroadCountriesList = document.getElementById('abroad-countries-list');
 
 // Initialization
 document.addEventListener('DOMContentLoaded', async () => {
+  // Canlı yayında (localhost veya 127.0.0.1 harici) Sıfırlama butonunu tamamen gizle ve kaldır!
+  if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    const resetBtn = document.getElementById('btn-reset-test');
+    if (resetBtn) resetBtn.remove();
+  }
   await checkUserStatus();
 });
 
@@ -103,7 +108,9 @@ voteButtons.forEach(button => {
   button.addEventListener('click', async (e) => {
     const candidate = e.currentTarget.getAttribute('data-candidate');
 
-    const confirmVote = confirm(`Oyunuzu ${candidate.toUpperCase()} tarafına kaydetmek istediğinizden emin misiniz? Konumunuz IP adresiniz üzerinden otomatik tespit edilecektir.`);
+    knglRename = candidate === 'kngl' ? 'ERAY' : 'HALK';
+
+    const confirmVote = confirm(`Oyunuzu ${knglRename} tarafına kaydetmek istediğinizden emin misiniz?`);
     if (!confirmVote) return;
 
     // Send vote
@@ -139,7 +146,7 @@ voteButtons.forEach(button => {
           }
         }
 
-        alert(`Oyunuz başarıyla kaydedildi!\n\nTespit Edilen Oy Konumunuz: ${locationName}`);
+        alert(`Oyunuz başarıyla kaydedildi!`);
         // Load and transition to election dashboard results
         await loadElectionResults();
       } else {
@@ -231,7 +238,7 @@ function renderAbroadResults(abroadData) {
       <div class="abroad-candidate-line ${!halkLead ? 'winner-line border-blue-500/20' : ''}">
         <div class="flex items-center space-x-2 text-blue-500 font-extrabold text-[10px]">
           <span class="h-1.5 w-1.5 rounded-full bg-blue-500 ${!halkLead ? 'animate-pulse' : ''}"></span>
-          <span>KNGL</span>
+          <span>ERAY</span>
         </div>
         <span class="text-blue-400 font-black text-[11px] ml-4">%${country.kngl_percentage.toFixed(1)} <span class="text-slate-500 font-bold text-[9px]">(${country.kngl_count.toLocaleString('tr-TR')} Oy)</span></span>
       </div>
@@ -242,6 +249,18 @@ function renderAbroadResults(abroadData) {
       linesMarkup = halkHtml + knglHtml;
     } else {
       linesMarkup = knglHtml + halkHtml;
+    }
+
+    // Determine the progress bar layout dynamically (empty countries show light purple)
+    let progressBarHtml = '';
+    if (country.total_votes === 0) {
+      progressBarHtml = `<div class="w-full bg-purple-500/20 border border-purple-500/10 h-full rounded-full animate-pulse-slow"></div>`;
+    } else {
+      progressBarHtml = `
+        <div class="absolute inset-y-0 left-1/2 w-px bg-white/20 z-10"></div>
+        <div class="bg-gradient-to-r from-red-700 to-red-500 h-full" style="width: ${progressHalk}%;"></div>
+        <div class="bg-gradient-to-l from-blue-700 to-blue-500 h-full flex-grow" style="width: ${progressKngl}%;"></div>
+      `;
     }
 
     const row = document.createElement('div');
@@ -258,12 +277,10 @@ function renderAbroadResults(abroadData) {
         </div>
       </div>
 
-      <!-- Center: Mini dual progress bar comparison -->
+      <!-- Center: Mini dual progress bar comparison (empty is light purple) -->
       <div class="flex-grow max-w-md hidden md:block">
         <div class="w-full bg-slate-950/60 border border-white/[0.03] h-2.5 rounded-full overflow-hidden relative flex">
-          <div class="absolute inset-y-0 left-1/2 w-px bg-white/20 z-10"></div>
-          <div class="bg-gradient-to-r from-red-700 to-red-500 h-full" style="width: ${progressHalk}%;"></div>
-          <div class="bg-gradient-to-l from-blue-700 to-blue-500 h-full flex-grow" style="width: ${progressKngl}%;"></div>
+          ${progressBarHtml}
         </div>
       </div>
 
@@ -345,7 +362,7 @@ function bindMapEvents(group, cityResult) {
       <div class="flex items-center justify-between text-blue-500 text-[10px] ${!halkLead ? 'bg-blue-500/[0.03] border border-blue-500/10 p-1.5 rounded-lg' : 'opacity-70 p-1.5'}">
           <div class="flex items-center space-x-1.5">
               <span class="h-2 w-2 rounded-full bg-blue-500 ${!halkLead ? 'animate-pulse' : ''}"></span>
-              <span class="font-bold">KNGL:</span>
+              <span class="font-bold">ERAY:</span>
           </div>
           <span class="font-extrabold">%${cityResult.kngl_percentage.toFixed(1)} <span class="text-slate-500 text-[8px]">(${cityResult.kngl_count.toLocaleString('tr-TR')} Oy)</span></span>
       </div>

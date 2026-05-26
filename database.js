@@ -84,8 +84,11 @@ async function initDb() {
       console.log('SQLite votes table checked/created.');
     }
     
-    // Seed database if empty
-    await seedDataIfEmpty();
+    // Seed database if empty (only in local development, never automatically in production)
+    const shouldSeed = !isProduction || process.env.SEED_DATABASE === 'true';
+    if (shouldSeed) {
+      await seedDataIfEmpty();
+    }
   } catch (error) {
     console.error('Database initialization error:', error);
   }
