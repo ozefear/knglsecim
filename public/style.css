@@ -1,0 +1,197 @@
+/* Global Typography and Core Reset Override */
+* {
+    font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #060913;
+    background-attachment: fixed;
+    overflow-x: hidden;
+}
+
+/* High-Tech Modern News Dashboard Grid Background */
+.bg-grid {
+    background-image: radial-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 0);
+    background-size: 24px 24px;
+}
+
+/* Sophisticated Glassmorphic Card Containers */
+.bg-slate-900\/20,
+.bg-slate-900\/30,
+.bg-white\/\[0\.015\], 
+.bg-white\/\[0\.01\], 
+.bg-white\/\[0\.02\] {
+    background: rgba(12, 16, 31, 0.35) !important;
+    backdrop-filter: blur(28px) !important;
+    -webkit-backdrop-filter: blur(28px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.035) !important;
+    box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.7) !important;
+    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* Card hover soft glow states */
+.bg-slate-900\/20:hover,
+.bg-slate-900\/30:hover,
+.bg-white\/\[0\.015\]:hover {
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    background: rgba(12, 16, 31, 0.45) !important;
+    box-shadow: 0 35px 70px -10px rgba(0, 0, 0, 0.8), 0 0 45px rgba(99, 102, 241, 0.03) !important;
+}
+
+/* Text Glow Effects */
+.text-glow-red {
+    text-shadow: 0 0 15px rgba(239, 68, 68, 0.5), 0 0 30px rgba(239, 68, 68, 0.15);
+}
+
+.text-glow-blue {
+    text-shadow: 0 0 15px rgba(59, 130, 246, 0.5), 0 0 30px rgba(59, 130, 246, 0.15);
+}
+
+.text-glow-indigo {
+    text-shadow: 0 0 15px rgba(99, 102, 241, 0.5), 0 0 30px rgba(99, 102, 241, 0.15);
+}
+
+/* Translucent mask backlights inside portraits */
+.bg-radial-glow-red {
+    background: radial-gradient(circle, rgba(239, 68, 68, 0.3) 0%, transparent 75%);
+}
+.bg-radial-glow-blue {
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, transparent 75%);
+}
+
+/* Interactive SVG Map Translucent Aesthetics */
+#svg-turkey {
+    width: 100%;
+    height: auto;
+    filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.6));
+}
+
+#svg-turkey path {
+    /* Subtle translucent dark grey for neutral state */
+    fill: rgba(255, 255, 255, 0.03); 
+    stroke: rgba(6, 9, 19, 0.95); /* Semi-transparent border matching the background */
+    stroke-width: 0.6px;
+    stroke-linejoin: round;
+    transition: fill 0.6s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.3s ease, stroke-width 0.3s ease;
+    cursor: pointer;
+}
+
+/* Red / Blue / Neutral winner mappings */
+#svg-turkey path.winner-halk {
+    fill: rgba(220, 38, 38, 0.75) !important; /* Premium Red */
+}
+#svg-turkey path.winner-halk:hover {
+    fill: rgba(239, 68, 68, 0.95) !important;
+}
+
+#svg-turkey path.winner-kngl {
+    fill: rgba(37, 99, 235, 0.75) !important; /* Premium Blue */
+}
+#svg-turkey path.winner-kngl:hover {
+    fill: rgba(59, 130, 246, 0.95) !important;
+}
+
+#svg-turkey path.winner-tie {
+    fill: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* City Hover Effects */
+#svg-turkey path:hover {
+    stroke: rgba(255, 255, 255, 0.6) !important; /* Elegant white border */
+    stroke-width: 1.2px !important;
+    filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.2));
+}
+
+/* Floating map tooltip custom layout (Fixed viewport-relative tracking) */
+#map-tooltip {
+    pointer-events: none;
+    transform: translate(-50%, -105%);
+    background: rgba(6, 9, 19, 0.94) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #060913;
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Battle Progress Bar styles */
+#halk-progress-bar {
+    box-shadow: 0 0 15px rgba(220, 38, 38, 0.3);
+}
+#kngl-progress-bar {
+    box-shadow: 0 0 15px rgba(37, 99, 235, 0.3);
+}
+
+/* Premium Slow Pulse for Giant Candidate Avatars */
+.animate-pulse-slow {
+    animation: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+@keyframes pulse-slow {
+    0%, 100% {
+        transform: scale(1);
+        filter: brightness(1);
+    }
+    50% {
+        transform: scale(1.015);
+        filter: brightness(1.08);
+    }
+}
+
+/* Abroad Rows Styling (Flexible Row Layout) */
+.abroad-row {
+    background: rgba(255, 255, 255, 0.01) !important;
+    border: 1px solid rgba(255, 255, 255, 0.03) !important;
+    border-radius: 20px !important;
+    padding: 16px 24px !important;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.3) !important;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.abroad-row:hover {
+    background: rgba(255, 255, 255, 0.02) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px -5px rgba(0, 0, 0, 0.5) !important;
+}
+@media (min-width: 768px) {
+    .abroad-row {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 32px;
+    }
+}
+
+/* Candidate line entries in abroad rows */
+.abroad-candidate-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 12px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.015);
+    border: 1px solid rgba(255, 255, 255, 0.02);
+    min-width: 170px;
+}
+.abroad-candidate-line.winner-line {
+    background: rgba(255, 255, 255, 0.025);
+    border-color: rgba(255, 255, 255, 0.06);
+}
+

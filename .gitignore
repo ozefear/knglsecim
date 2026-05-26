@@ -1,0 +1,50 @@
+node_modules/
+
+# logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# directories
+coverage/
+.cache/
+dist/
+build/
+out/
+
+# environment
+.env
+.env.*
+!.env.example
+
+# editor directories and files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# vercel
+.vercel/
+
+# Optional npm cache folder
+.npm/
+
+# debug
+*.tgz
