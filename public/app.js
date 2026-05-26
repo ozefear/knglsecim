@@ -63,26 +63,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Do not auto-load results on the main voting page. Results page has its own script (results.js).
-  // Check if voting is closed and show notice
+  // Auto-load results directly on the homepage (no password or vote gating)
   try {
-    const resp = await fetch('/voting-status');
-    if (resp.ok) {
-      const s = await resp.json();
-      if (s.closed) {
-        if (gatekeepingContainer) gatekeepingContainer.classList.add('hidden');
-        if (votingClosedContainer) votingClosedContainer.classList.remove('hidden');
-      } else {
-        if (gatekeepingContainer) gatekeepingContainer.classList.remove('hidden');
-      }
-    } else {
-      if (gatekeepingContainer) gatekeepingContainer.classList.remove('hidden');
-    }
+    await loadElectionResults();
   } catch (err) {
-    console.error('Could not check voting status:', err);
-    if (gatekeepingContainer) gatekeepingContainer.classList.remove('hidden');
-  } finally {
+    console.error('Error initializing results:', err);
     showLoading(false);
+    showResults(false);
   }
 });
 
@@ -207,54 +194,26 @@ async function loadElectionResults() {
   }
 
   try {
-    const password = sessionStorage.getItem('results_password') || '';
-    const response = await fetch('/api/results', {
-      headers: { 'x-access-password': password }
-    });
-
-    if (response.status === 401) {
-      sessionStorage.removeItem('results_password');
-      if (pollingInterval) {
-        clearInterval(pollingInterval);
-        pollingInterval = null;
-      }
-      showLoading(false);
-      showLockScreen(true);
-      if (!isFirstLoad) {
-        alert('Hata: Geçersiz veya süresi dolmuş erişim şifresi!');
-      } else {
-        alert('Hata: Geçersiz erişim şifresi!');
-      }
-      return;
-    }
-
+    // Fetch results publicly — bypass password and vote-gating so homepage shows results directly.
+    const response = await fetch('/api/results');
     const data = await response.json();
 
-    // 1. If the user has NOT voted, they must see the voting gatekeeper screen
-    if (!data.voted) {
+    // If results are missing, show a friendly message inside results container
+    if (!data || !data.results) {
+      console.warn('Results not available yet from /api/results');
       if (pollingInterval) {
         clearInterval(pollingInterval);
         pollingInterval = null;
       }
+      // Show an informative message but do not require a password
       showLoading(false);
-      showGatekeeper(true);
-      return;
-    }
-
-    // 2. If the user HAS voted, but the password is correct/incorrect
-    if (data.results === null) {
-      // Password was wrong or missing, show lock screen
-      sessionStorage.removeItem('results_password');
-      if (pollingInterval) {
-        clearInterval(pollingInterval);
-        pollingInterval = null;
+      if (resultsContainer) {
+        resultsContainer.innerHTML = '<div class="w-full text-center py-12 text-slate-400">Sonuçlar şu anda mevcut değil veya yüklenemedi.</div>';
+        showResults(true);
       }
-      showLoading(false);
-      showLockScreen(true);
-      
-      // Only show error message if they actually entered a password that failed
-      if (password) {
-        alert(data.error || 'Hata: Geçersiz veya süresi dolmuş erişim şifresi!');
+      // Start polling to retry
+      if (!pollingInterval) {
+        pollingInterval = setInterval(loadElectionResults, 15000);
       }
       return;
     }

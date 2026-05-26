@@ -229,49 +229,16 @@ app.get('/api/results', async (req, res) => {
       });
     }
 
-    // 3. Validate the password header
-    const accessPassword = req.headers['x-access-password'];
-    const expectedPassword = process.env.RESULTS_PASSWORD || 'secim2026';
-    
-    // If no password is provided in header, do not treat it as a failed attempt, just prompt (saves users checking status on load)
-    if (!accessPassword) {
+    // For the public homepage, return results without requiring a password
+    // Still honor brute-force blocks (if any) but do not gate by 'voted' or require an access password.
+    if (bruteCheck.blocked) {
       return res.json({
         voted,
         results: null,
-        error: 'Şifre doğrulanmadı.'
+        error: `Çok fazla hatalı şifre denemesi. Cihazınız ${bruteCheck.remainingMin} dakika kilitlendi.`
       });
     }
 
-    const isPasswordCorrect = accessPassword === expectedPassword;
-
-    // 4. If password is wrong, record failed attempt and block if limit reached
-    if (!isPasswordCorrect) {
-      const record = recordFailedAttempt(ip);
-      const remainingAttempts = Math.max(0, 5 - record.count);
-      const errorMsg = remainingAttempts === 0
-        ? 'Çok fazla hatalı şifre denemesi. Cihazınız 15 dakika kilitlendi.'
-        : `Hatalı şifre. Kalan deneme hakkınız: ${remainingAttempts}`;
-      
-      return res.json({
-        voted,
-        results: null,
-        error: errorMsg
-      });
-    }
-
-    // 5. If password is correct, clear any failed attempts
-    clearFailedAttempts(ip);
-
-    // 6. If they have not voted, we still restrict viewing
-    if (!voted) {
-      return res.json({
-        voted,
-        results: null,
-        error: 'Sonuçları görebilmek için önce oy kullanmalısınız!'
-      });
-    }
-
-    // 7. Fetch and return full results
     const results = await db.getElectionResults();
     res.json({
       voted,
